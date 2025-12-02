@@ -1,6 +1,6 @@
 package com.company.hrsystem;
 
-import com.company.hrsystem.utils.SecurityManager;
+import com.company.hrsystem.SecurityManager;
 
 import java.util.Scanner;
 
@@ -130,4 +130,5 @@ public class HRSystem {
         HRSystem hrSystem = new HRSystem();
         hrSystem.start();
     }
+
 }

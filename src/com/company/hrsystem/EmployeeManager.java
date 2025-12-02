@@ -1,5 +1,8 @@
 package com.company.hrsystem;
 
+import org.nocrala.tools.texttablefmt.BorderStyle;
+import org.nocrala.tools.texttablefmt.Table;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,19 +25,19 @@ public class EmployeeManager {
     private void initializeSampleData() {
         // Create sample employees
         employees.add(new Employee(nextId++, "John Doe", "Software Engineer", "IT",
-                LocalDate.of(2022, 3, 15), 75000.0, "john.doe@company.com", "+1-555-0101", "Active"));
+                LocalDate.of(2022, 3, 15), 7500.0, "john.doe@company.com", "097-586-473-82", "Active"));
 
         employees.add(new Employee(nextId++, "Jane Smith", "HR Manager", "HR",
-                LocalDate.of(2020, 6, 20), 85000.0, "jane.smith@company.com", "+1-555-0102", "Active"));
+                LocalDate.of(2020, 6, 20), 8500.0, "jane.smith@company.com", "096-768-567", "Active"));
 
         employees.add(new Employee(nextId++, "Robert Johnson", "Financial Analyst", "Finance",
-                LocalDate.of(2021, 11, 5), 68000.0, "robert.johnson@company.com", "+1-555-0103", "Active"));
+                LocalDate.of(2021, 11, 5), 6800.0, "robert.johnson@company.com", "010-934-792", "Active"));
 
         employees.add(new Employee(nextId++, "Emily Davis", "Marketing Specialist", "Marketing",
-                LocalDate.of(2023, 1, 10), 62000.0, "emily.davis@company.com", "+1-555-0104", "Active"));
+                LocalDate.of(2023, 1, 10), 6200.0, "emily.davis@company.com", "017-924-855", "Active"));
 
         employees.add(new Employee(nextId++, "Michael Wilson", "Operations Manager", "Operations",
-                LocalDate.of(2019, 8, 12), 78000.0, "michael.wilson@company.com", "+1-555-0105", "Inactive"));
+                LocalDate.of(2019, 8, 12), 7800.0, "michael.wilson@company.com", "087-654-003", "Inactive"));
     }
 
     // Add new employee
@@ -69,6 +72,32 @@ public class EmployeeManager {
         employees.add(newEmployee);
 
         System.out.println("\n✅ Employee added successfully!");
+
+        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
+
+        table.addCell("ID");
+        table.addCell("Full Name");
+        table.addCell("Position");
+        table.addCell("Department");
+        table.addCell("Hire Date");
+        table.addCell("Salary");
+        table.addCell("Email");
+        table.addCell("Phone");
+        table.addCell("Status");
+
+        table.addCell(String.valueOf(newEmployee.getId()));
+        table.addCell(newEmployee.getFullName());
+        table.addCell(newEmployee.getPosition());
+        table.addCell(newEmployee.getDepartment());
+        table.addCell(newEmployee.getHireDate().toString());
+        table.addCell(String.valueOf(newEmployee.getSalary()));
+        table.addCell(newEmployee.getEmail());
+        table.addCell(newEmployee.getPhone());
+        table.addCell(newEmployee.getStatus());
+
+        System.out.println("\n=== NEW EMPLOYEE ADDED ===");
+        System.out.println(table.render());
+
         System.out.println("Employee ID: " + newEmployee.getId());
         System.out.println("Details: " + newEmployee);
     }
@@ -77,16 +106,56 @@ public class EmployeeManager {
     public void viewEmployee() {
         System.out.println("\n=== VIEW EMPLOYEE ===");
         System.out.print("Enter Employee ID or Name: ");
-        String searchTerm = scanner.nextLine();
+        String searchTerm = scanner.nextLine().toLowerCase();
 
-        Employee employee = findEmployee(searchTerm);
-        if (employee != null) {
-            System.out.println("\n📋 Employee Details:");
-            System.out.println(employee);
-        } else {
-            System.out.println("❌ Employee not found.");
+
+        List<Employee> matches = new ArrayList<>();
+        for (Employee emp : employees) {
+
+            boolean idMatch = String.valueOf(emp.getId()).contains(searchTerm);
+            boolean nameMatch = emp.getFullName().toLowerCase().contains(searchTerm);
+
+            if (idMatch || nameMatch) {
+                matches.add(emp);
+            }
         }
+
+        if (matches.isEmpty()) {
+            System.out.println("❌ No employees match your search.");
+            return;
+        }
+
+        // Table with headers (9 columns)
+        Table table = new Table(9, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
+
+        table.addCell("ID");
+        table.addCell("Full Name");
+        table.addCell("Position");
+        table.addCell("Department");
+        table.addCell("Hire Date");
+        table.addCell("Salary");
+        table.addCell("Email");
+        table.addCell("Phone");
+        table.addCell("Status");
+
+        // Add each matched employee
+        for (Employee emp : matches) {
+            table.addCell(String.valueOf(emp.getId()));
+            table.addCell(emp.getFullName());
+            table.addCell(emp.getPosition());
+            table.addCell(emp.getDepartment());
+            table.addCell(emp.getHireDate().format(DATE_FORMATTER));
+            table.addCell(String.valueOf(emp.getSalary()));
+            table.addCell(emp.getEmail());
+            table.addCell(emp.getPhone());
+            table.addCell(emp.getStatus());
+        }
+
+        System.out.println("\n📋 Search Results:");
+        System.out.println(table.render());
     }
+
+
 
     // Update employee
     public void updateEmployee() {
@@ -174,62 +243,61 @@ public class EmployeeManager {
         System.out.print("Choose option (1-4): ");
 
         int choice = getIntInput();
-        List<Employee> filteredEmployees = new ArrayList<>(employees);
+        List<Employee> filtered = new ArrayList<>(employees);
 
         switch (choice) {
-            case 1:
-                // Show all employees
-                break;
+
+
+
             case 2:
                 System.out.print("Enter department: ");
-                String department = scanner.nextLine();
-                filteredEmployees = filteredEmployees.stream()
-                        .filter(emp -> emp.getDepartment().equalsIgnoreCase(department))
+                String dept = scanner.nextLine();
+                filtered = filtered.stream()
+                        .filter(e -> e.getDepartment().equalsIgnoreCase(dept))
                         .collect(Collectors.toList());
                 break;
             case 3:
                 System.out.print("Enter status (Active/Inactive): ");
                 String status = scanner.nextLine();
-                filteredEmployees = filteredEmployees.stream()
-                        .filter(emp -> emp.getStatus().equalsIgnoreCase(status))
+                filtered = filtered.stream()
+                        .filter(e -> e.getStatus().equalsIgnoreCase(status))
                         .collect(Collectors.toList());
                 break;
             case 4:
-                System.out.print("Enter minimum salary: ");
-                double minSalary = getDoubleInput();
-                System.out.print("Enter maximum salary: ");
-                double maxSalary = getDoubleInput();
-                filteredEmployees = filteredEmployees.stream()
-                        .filter(emp -> emp.getSalary() >= minSalary && emp.getSalary() <= maxSalary)
+                System.out.print("Min salary: ");
+                double min = getDoubleInput();
+                System.out.print("Max salary: ");
+                double max = getDoubleInput();
+                filtered = filtered.stream()
+                        .filter(e -> e.getSalary() >= min && e.getSalary() <= max)
                         .collect(Collectors.toList());
                 break;
-            default:
-                System.out.println("Invalid option. Showing all employees.");
         }
 
-        if (filteredEmployees.isEmpty()) {
-            System.out.println("No employees found matching the criteria.");
-        } else {
-            System.out.println("\n📊 Employee List:");
-            System.out.println("==================================================================================");
-            System.out.printf("%-4s %-20s %-15s %-12s %-12s %-10s %s%n",
-                    "ID", "Name", "Position", "Department", "Hire Date", "Salary", "Status");
-            System.out.println("==================================================================================");
-
-            for (Employee emp : filteredEmployees) {
-                System.out.printf("%-4d %-20s %-15s %-12s %-12s $%-9.2f %s%n",
-                        emp.getId(),
-                        emp.getFullName().length() > 19 ? emp.getFullName().substring(0, 19) : emp.getFullName(),
-                        emp.getPosition().length() > 14 ? emp.getPosition().substring(0, 14) : emp.getPosition(),
-                        emp.getDepartment().length() > 11 ? emp.getDepartment().substring(0, 11) : emp.getDepartment(),
-                        emp.getHireDate().format(DATE_FORMATTER),
-                        emp.getSalary(),
-                        emp.getStatus());
-            }
-            System.out.println("==================================================================================");
-            System.out.println("Total employees: " + filteredEmployees.size());
+        if (filtered.isEmpty()) {
+            System.out.println("❌ No employees found.");
+            return;
         }
+
+        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
+
+        for (Employee e : filtered) {
+            table.addCell(String.valueOf(e.getId()));
+            table.addCell(e.getFullName());
+            table.addCell(e.getPosition());
+            table.addCell(e.getDepartment());
+            table.addCell(e.getHireDate().format(DATE_FORMATTER));
+            table.addCell(String.valueOf(e.getSalary()));
+            table.addCell(e.getEmail());
+            table.addCell(e.getPhone());
+            table.addCell(e.getStatus());
+        }
+
+        System.out.println("\n📊 Employee List:");
+        System.out.println(table.render());
+        System.out.println("Total employees: " + filtered.size());
     }
+
 
     // Search employees
     public void searchEmployees() {
@@ -245,6 +313,21 @@ public class EmployeeManager {
                                 emp.getEmail().toLowerCase().contains(searchTerm) ||
                                 emp.getStatus().toLowerCase().contains(searchTerm))
                 .collect(Collectors.toList());
+
+        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
+
+
+        for (Employee e : results) {
+            table.addCell(String.valueOf(e.getId()));
+            table.addCell(e.getFullName());
+            table.addCell(e.getPosition());
+            table.addCell(e.getDepartment());
+            table.addCell(e.getHireDate().format(DATE_FORMATTER));
+            table.addCell(String.valueOf(e.getSalary()));
+            table.addCell(e.getEmail());
+            table.addCell(e.getPhone());
+            table.addCell(e.getStatus());
+        }
 
         if (results.isEmpty()) {
             System.out.println("❌ No employees found matching your search.");
@@ -330,9 +413,9 @@ public class EmployeeManager {
         }
 
         System.out.println("\n📁 Exported Data:");
-        System.out.println("====================");
+        System.out.println("============================================================================================");
         System.out.println(exportData.toString());
-        System.out.println("====================");
+        System.out.println("============================================================================================");
         System.out.println("✅ Data exported successfully! You can copy this data to a file.");
     }
 

@@ -1,4 +1,4 @@
-package com.company.hrsystem.utils;
+package com.company.hrsystem;
 
 import java.util.Scanner;
 

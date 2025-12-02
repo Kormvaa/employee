@@ -18,6 +18,7 @@ public class Employee {
 
     public Employee(int id, String fullName, String position, String department,
                     LocalDate hireDate, double salary, String email, String phone, String status) {
+
         this.id = id;
         this.fullName = fullName;
         this.position = position;
