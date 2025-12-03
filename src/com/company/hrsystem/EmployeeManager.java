@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class EmployeeManager {
+
     private List<Employee> employees;
     private int nextId;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -22,8 +23,10 @@ public class EmployeeManager {
         initializeSampleData();
     }
 
+    // =======================================================
+    // SAMPLE DATA
+    // =======================================================
     private void initializeSampleData() {
-        // Create sample employees
         employees.add(new Employee(nextId++, "John Doe", "Software Engineer", "IT",
                 LocalDate.of(2022, 3, 15), 7500.0, "john.doe@company.com", "097-586-473-82", "Active"));
 
@@ -40,7 +43,33 @@ public class EmployeeManager {
                 LocalDate.of(2019, 8, 12), 7800.0, "michael.wilson@company.com", "087-654-003", "Inactive"));
     }
 
-    // Add new employee
+    // =======================================================
+    // TABLE HELPERS
+    // =======================================================
+    private Table createEmployeeTable() {
+        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
+        String[] headers = {"ID", "Full Name", "Position", "Department",
+                "Hire Date", "Salary", "Email", "Phone", "Status"};
+
+        for (String h : headers) table.addCell(h);
+        return table;
+    }
+
+    private void addEmployeeToTable(Table table, Employee e) {
+        table.addCell(String.valueOf(e.getId()));
+        table.addCell(e.getFullName());
+        table.addCell(e.getPosition());
+        table.addCell(e.getDepartment());
+        table.addCell(e.getHireDate().format(DATE_FORMATTER));
+        table.addCell(String.valueOf(e.getSalary()));
+        table.addCell(e.getEmail());
+        table.addCell(e.getPhone());
+        table.addCell(e.getStatus());
+    }
+
+    // =======================================================
+    // ADD EMPLOYEE
+    // =======================================================
     public void addEmployee() {
         System.out.println("\n=== ADD NEW EMPLOYEE ===");
 
@@ -67,399 +96,337 @@ public class EmployeeManager {
         System.out.print("Status (Active/Inactive): ");
         String status = scanner.nextLine();
 
-        Employee newEmployee = new Employee(nextId++, fullName, position, department,
+        Employee emp = new Employee(nextId++, fullName, position, department,
                 hireDate, salary, email, phone, status);
-        employees.add(newEmployee);
 
+        employees.add(emp);
         System.out.println("\n✅ Employee added successfully!");
 
-        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
+        Table table = createEmployeeTable();
+        addEmployeeToTable(table, emp);
 
-        table.addCell("ID");
-        table.addCell("Full Name");
-        table.addCell("Position");
-        table.addCell("Department");
-        table.addCell("Hire Date");
-        table.addCell("Salary");
-        table.addCell("Email");
-        table.addCell("Phone");
-        table.addCell("Status");
-
-        table.addCell(String.valueOf(newEmployee.getId()));
-        table.addCell(newEmployee.getFullName());
-        table.addCell(newEmployee.getPosition());
-        table.addCell(newEmployee.getDepartment());
-        table.addCell(newEmployee.getHireDate().toString());
-        table.addCell(String.valueOf(newEmployee.getSalary()));
-        table.addCell(newEmployee.getEmail());
-        table.addCell(newEmployee.getPhone());
-        table.addCell(newEmployee.getStatus());
-
-        System.out.println("\n=== NEW EMPLOYEE ADDED ===");
         System.out.println(table.render());
-
-        System.out.println("Employee ID: " + newEmployee.getId());
-        System.out.println("Details: " + newEmployee);
     }
 
-    // View employee by ID or name
+    // =======================================================
+    // VIEW EMPLOYEE
+    // =======================================================
     public void viewEmployee() {
         System.out.println("\n=== VIEW EMPLOYEE ===");
         System.out.print("Enter Employee ID or Name: ");
         String searchTerm = scanner.nextLine().toLowerCase();
 
-
-        List<Employee> matches = new ArrayList<>();
-        for (Employee emp : employees) {
-
-            boolean idMatch = String.valueOf(emp.getId()).contains(searchTerm);
-            boolean nameMatch = emp.getFullName().toLowerCase().contains(searchTerm);
-
-            if (idMatch || nameMatch) {
-                matches.add(emp);
-            }
-        }
+        List<Employee> matches = employees.stream()
+                .filter(e ->
+                        String.valueOf(e.getId()).contains(searchTerm) ||
+                                e.getFullName().toLowerCase().contains(searchTerm))
+                .collect(Collectors.toList());
 
         if (matches.isEmpty()) {
-            System.out.println("❌ No employees match your search.");
+            System.out.println("❌ No employees found.");
             return;
         }
 
-        // Table with headers (9 columns)
-        Table table = new Table(9, BorderStyle.UNICODE_BOX_DOUBLE_BORDER);
-
-        table.addCell("ID");
-        table.addCell("Full Name");
-        table.addCell("Position");
-        table.addCell("Department");
-        table.addCell("Hire Date");
-        table.addCell("Salary");
-        table.addCell("Email");
-        table.addCell("Phone");
-        table.addCell("Status");
-
-        // Add each matched employee
-        for (Employee emp : matches) {
-            table.addCell(String.valueOf(emp.getId()));
-            table.addCell(emp.getFullName());
-            table.addCell(emp.getPosition());
-            table.addCell(emp.getDepartment());
-            table.addCell(emp.getHireDate().format(DATE_FORMATTER));
-            table.addCell(String.valueOf(emp.getSalary()));
-            table.addCell(emp.getEmail());
-            table.addCell(emp.getPhone());
-            table.addCell(emp.getStatus());
-        }
+        Table table = createEmployeeTable();
+        matches.forEach(e -> addEmployeeToTable(table, e));
 
         System.out.println("\n📋 Search Results:");
         System.out.println(table.render());
     }
 
-
-
-    // Update employee
+    // =======================================================
+    // UPDATE EMPLOYEE
+    // =======================================================
     public void updateEmployee() {
         System.out.println("\n=== UPDATE EMPLOYEE ===");
-        System.out.print("Enter Employee ID or Name to update: ");
-        String searchTerm = scanner.nextLine();
+        System.out.print("Enter Employee ID or Name: ");
+        String term = scanner.nextLine();
 
-        Employee employee = findEmployee(searchTerm);
-        if (employee == null) {
+        Employee emp = findEmployee(term);
+        if (emp == null) {
             System.out.println("❌ Employee not found.");
             return;
         }
 
         System.out.println("\nCurrent Details:");
-        System.out.println(employee);
+        Table before = createEmployeeTable();
+        addEmployeeToTable(before, emp);
+        System.out.println(before.render());
+
         System.out.println("\nEnter new details (press Enter to keep current value):");
 
-        System.out.print("Full Name [" + employee.getFullName() + "]: ");
-        String fullName = scanner.nextLine();
-        if (!fullName.isEmpty()) employee.setFullName(fullName);
+        System.out.print("Full Name [" + emp.getFullName() + "]: ");
+        String s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setFullName(s);
 
-        System.out.print("Position [" + employee.getPosition() + "]: ");
-        String position = scanner.nextLine();
-        if (!position.isEmpty()) employee.setPosition(position);
+        System.out.print("Position [" + emp.getPosition() + "]: ");
+        s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setPosition(s);
 
-        System.out.print("Department [" + employee.getDepartment() + "]: ");
-        String department = scanner.nextLine();
-        if (!department.isEmpty()) employee.setDepartment(department);
+        System.out.print("Department [" + emp.getDepartment() + "]: ");
+        s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setDepartment(s);
 
-        System.out.print("Salary [" + employee.getSalary() + "]: ");
-        String salaryInput = scanner.nextLine();
-        if (!salaryInput.isEmpty()) employee.setSalary(Double.parseDouble(salaryInput));
+        System.out.print("Salary [" + emp.getSalary() + "]: ");
+        s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setSalary(Double.parseDouble(s));
 
-        System.out.print("Email [" + employee.getEmail() + "]: ");
-        String email = scanner.nextLine();
-        if (!email.isEmpty()) employee.setEmail(email);
+        System.out.print("Email [" + emp.getEmail() + "]: ");
+        s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setEmail(s);
 
-        System.out.print("Phone [" + employee.getPhone() + "]: ");
-        String phone = scanner.nextLine();
-        if (!phone.isEmpty()) employee.setPhone(phone);
+        System.out.print("Phone [" + emp.getPhone() + "]: ");
+        s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setPhone(s);
 
-        System.out.print("Status [" + employee.getStatus() + "]: ");
-        String status = scanner.nextLine();
-        if (!status.isEmpty()) employee.setStatus(status);
+        System.out.print("Status [" + emp.getStatus() + "]: ");
+        s = scanner.nextLine();
+        if (!s.isEmpty()) emp.setStatus(s);
 
-        System.out.println("✅ Employee updated successfully!");
+        System.out.println("✅ Employee updated!");
+
+        Table after = createEmployeeTable();
+        addEmployeeToTable(after, emp);
+
+        System.out.println("\n=== UPDATED EMPLOYEE ===");
+        System.out.println(after.render());
     }
 
-    // Remove employee
+    // =======================================================
+    // REMOVE EMPLOYEE
+    // =======================================================
     public boolean removeEmployee() {
         System.out.println("\n=== REMOVE EMPLOYEE ===");
-        System.out.print("Enter Employee ID or Name to remove: ");
-        String searchTerm = scanner.nextLine();
+        System.out.print("Enter Employee ID or Name: ");
+        String term = scanner.nextLine();
 
-        Employee employee = findEmployee(searchTerm);
-        if (employee == null) {
+        Employee emp = findEmployee(term);
+        if (emp == null) {
             System.out.println("❌ Employee not found.");
             return false;
         }
 
         System.out.println("\nEmployee to remove:");
-        System.out.println(employee);
-        System.out.print("Are you sure you want to remove this employee? (yes/no): ");
-        String confirmation = scanner.nextLine();
+        Table table = createEmployeeTable();
+        addEmployeeToTable(table, emp);
+        System.out.println(table.render());
 
-        if (confirmation.equalsIgnoreCase("yes")) {
-            employees.remove(employee);
-            System.out.println("✅ Employee removed successfully!");
-            return true;
-        } else {
+        System.out.print("Are you sure? (yes/no): ");
+        if (!scanner.nextLine().equalsIgnoreCase("yes")) {
             System.out.println("❌ Removal cancelled.");
             return false;
         }
+
+        employees.remove(emp);
+        System.out.println("✅ Employee removed!");
+        return true;
     }
 
-    // List all employees with filtering
+    // =======================================================
+    // LIST ALL EMPLOYEES
+    // =======================================================
     public void listAllEmployees() {
         System.out.println("\n=== ALL EMPLOYEES ===");
 
-        System.out.println("Filter options:");
-        System.out.println("1. All employees");
+        System.out.println("1. All");
         System.out.println("2. By department");
         System.out.println("3. By status");
         System.out.println("4. By salary range");
-        System.out.print("Choose option (1-4): ");
+        System.out.print("Choose option: ");
 
         int choice = getIntInput();
-        List<Employee> filtered = new ArrayList<>(employees);
+        List<Employee> list = new ArrayList<>(employees);
 
         switch (choice) {
-
-
-
-            case 2:
-                System.out.print("Enter department: ");
-                String dept = scanner.nextLine();
-                filtered = filtered.stream()
-                        .filter(e -> e.getDepartment().equalsIgnoreCase(dept))
-                        .collect(Collectors.toList());
-                break;
-            case 3:
-                System.out.print("Enter status (Active/Inactive): ");
-                String status = scanner.nextLine();
-                filtered = filtered.stream()
-                        .filter(e -> e.getStatus().equalsIgnoreCase(status))
-                        .collect(Collectors.toList());
-                break;
-            case 4:
+            case 2 -> {
+                System.out.print("Department: ");
+                String d = scanner.nextLine();
+                list = list.stream().filter(e -> e.getDepartment().equalsIgnoreCase(d)).toList();
+            }
+            case 3 -> {
+                System.out.print("Status: ");
+                String s = scanner.nextLine();
+                list = list.stream().filter(e -> e.getStatus().equalsIgnoreCase(s)).toList();
+            }
+            case 4 -> {
                 System.out.print("Min salary: ");
                 double min = getDoubleInput();
                 System.out.print("Max salary: ");
                 double max = getDoubleInput();
-                filtered = filtered.stream()
-                        .filter(e -> e.getSalary() >= min && e.getSalary() <= max)
-                        .collect(Collectors.toList());
-                break;
+                list = list.stream().filter(e -> e.getSalary() >= min && e.getSalary() <= max).toList();
+            }
         }
 
-        if (filtered.isEmpty()) {
+        if (list.isEmpty()) {
             System.out.println("❌ No employees found.");
             return;
         }
 
-        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
-
-        for (Employee e : filtered) {
-            table.addCell(String.valueOf(e.getId()));
-            table.addCell(e.getFullName());
-            table.addCell(e.getPosition());
-            table.addCell(e.getDepartment());
-            table.addCell(e.getHireDate().format(DATE_FORMATTER));
-            table.addCell(String.valueOf(e.getSalary()));
-            table.addCell(e.getEmail());
-            table.addCell(e.getPhone());
-            table.addCell(e.getStatus());
-        }
+        Table table = createEmployeeTable();
+        list.forEach(e -> addEmployeeToTable(table, e));
 
         System.out.println("\n📊 Employee List:");
         System.out.println(table.render());
-        System.out.println("Total employees: " + filtered.size());
+        System.out.println("Total: " + list.size());
     }
 
-
-    // Search employees
+    // =======================================================
+    // SEARCH EMPLOYEES
+    // =======================================================
     public void searchEmployees() {
         System.out.println("\n=== SEARCH EMPLOYEES ===");
-        System.out.print("Enter search term (name, position, department, etc.): ");
-        String searchTerm = scanner.nextLine().toLowerCase();
+        System.out.print("Search term: ");
+        String term = scanner.nextLine().toLowerCase();
 
         List<Employee> results = employees.stream()
-                .filter(emp ->
-                        emp.getFullName().toLowerCase().contains(searchTerm) ||
-                                emp.getPosition().toLowerCase().contains(searchTerm) ||
-                                emp.getDepartment().toLowerCase().contains(searchTerm) ||
-                                emp.getEmail().toLowerCase().contains(searchTerm) ||
-                                emp.getStatus().toLowerCase().contains(searchTerm))
-                .collect(Collectors.toList());
-
-        Table table = new Table(9, BorderStyle.UNICODE_DOUBLE_BOX);
-
-
-        for (Employee e : results) {
-            table.addCell(String.valueOf(e.getId()));
-            table.addCell(e.getFullName());
-            table.addCell(e.getPosition());
-            table.addCell(e.getDepartment());
-            table.addCell(e.getHireDate().format(DATE_FORMATTER));
-            table.addCell(String.valueOf(e.getSalary()));
-            table.addCell(e.getEmail());
-            table.addCell(e.getPhone());
-            table.addCell(e.getStatus());
-        }
+                .filter(e ->
+                        e.getFullName().toLowerCase().contains(term) ||
+                                e.getPosition().toLowerCase().contains(term) ||
+                                e.getDepartment().toLowerCase().contains(term) ||
+                                e.getEmail().toLowerCase().contains(term) ||
+                                e.getStatus().toLowerCase().contains(term))
+                .toList();
 
         if (results.isEmpty()) {
-            System.out.println("❌ No employees found matching your search.");
-        } else {
-            System.out.println("\n🔍 Search Results (" + results.size() + " found):");
-            for (Employee emp : results) {
-                System.out.println(emp);
-            }
-        }
-    }
-
-    // Generate reports
-    public void generateReports() {
-        System.out.println("\n=== REPORTS ===");
-
-        // Basic statistics
-        long totalEmployees = employees.size();
-        long activeEmployees = employees.stream().filter(emp -> "Active".equals(emp.getStatus())).count();
-        double totalSalary = employees.stream().mapToDouble(Employee::getSalary).sum();
-        double avgSalary = totalEmployees > 0 ? totalSalary / totalEmployees : 0;
-
-        System.out.println("📊 Employee Statistics:");
-        System.out.println("• Total Employees: " + totalEmployees);
-        System.out.println("• Active Employees: " + activeEmployees);
-        System.out.println("• Inactive Employees: " + (totalEmployees - activeEmployees));
-        System.out.printf("• Average Salary: $%.2f%n", avgSalary);
-        System.out.printf("• Total Salary Expense: $%.2f%n", totalSalary);
-
-        // Department headcount
-        System.out.println("\n🏢 Department Headcount:");
-        Map<String, Long> deptCount = employees.stream()
-                .collect(Collectors.groupingBy(Employee::getDepartment, Collectors.counting()));
-
-        deptCount.entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .forEach(entry -> {
-                    long count = entry.getValue();
-                    double deptAvgSalary = employees.stream()
-                            .filter(emp -> emp.getDepartment().equals(entry.getKey()))
-                            .mapToDouble(Employee::getSalary)
-                            .average()
-                            .orElse(0.0);
-                    System.out.printf("• %s: %d employees (Avg Salary: $%.2f)%n",
-                            entry.getKey(), count, deptAvgSalary);
-                });
-
-        // Salary distribution
-        System.out.println("\n💰 Salary Distribution:");
-        System.out.println("• < $50,000: " + employees.stream().filter(emp -> emp.getSalary() < 50000).count());
-        System.out.println("• $50,000 - $75,000: " + employees.stream().filter(emp -> emp.getSalary() >= 50000 && emp.getSalary() < 75000).count());
-        System.out.println("• $75,000 - $100,000: " + employees.stream().filter(emp -> emp.getSalary() >= 75000 && emp.getSalary() < 100000).count());
-        System.out.println("• ≥ $100,000: " + employees.stream().filter(emp -> emp.getSalary() >= 100000).count());
-    }
-
-    // Export data
-    public void exportData() {
-        System.out.println("\n=== EXPORT DATA ===");
-        System.out.println("1. Export to CSV");
-        System.out.println("2. Export to JSON");
-        System.out.print("Choose format (1-2): ");
-
-        int choice = getIntInput();
-        StringBuilder exportData = new StringBuilder();
-
-        if (choice == 1) {
-            // CSV header
-            exportData.append("ID,Full Name,Position,Department,Hire Date,Salary,Email,Phone,Status\n");
-            for (Employee emp : employees) {
-                exportData.append(emp.toCSV()).append("\n");
-            }
-        } else if (choice == 2) {
-            // JSON format
-            exportData.append("[\n");
-            for (int i = 0; i < employees.size(); i++) {
-                exportData.append(employees.get(i).toJSON());
-                if (i < employees.size() - 1) exportData.append(",");
-                exportData.append("\n");
-            }
-            exportData.append("]");
-        } else {
-            System.out.println("Invalid choice.");
+            System.out.println("❌ No matches.");
             return;
         }
 
-        System.out.println("\n📁 Exported Data:");
-        System.out.println("============================================================================================");
-        System.out.println(exportData.toString());
-        System.out.println("============================================================================================");
-        System.out.println("✅ Data exported successfully! You can copy this data to a file.");
+        Table table = createEmployeeTable();
+        results.forEach(e -> addEmployeeToTable(table, e));
+
+        System.out.println("\n🔍 Results (" + results.size() + "):");
+        System.out.println(table.render());
     }
 
-    // Import data (simplified - from console input)
+    // =======================================================
+    // REPORTS
+    // =======================================================
+    public void generateReports() {
+        System.out.println("\n=== EMPLOYEE REPORTS ===");
+
+        long total = employees.size();
+        long active = employees.stream().filter(e -> e.getStatus().equals("Active")).count();
+        double totalSalary = employees.stream().mapToDouble(Employee::getSalary).sum();
+        double avgSalary = total > 0 ? totalSalary / total : 0;
+
+        Table summary = new Table(2, BorderStyle.UNICODE_DOUBLE_BOX);
+        summary.addCell("Metric");
+        summary.addCell("Value");
+        summary.addCell("Total Employees");
+        summary.addCell(String.valueOf(total));
+        summary.addCell("Active Employees");
+        summary.addCell(String.valueOf(active));
+        summary.addCell("Inactive Employees");
+        summary.addCell(String.valueOf(total - active));
+        summary.addCell("Average Salary");
+        summary.addCell(String.format("%.2f", avgSalary));
+        summary.addCell("Total Salary Expense");
+        summary.addCell(String.format("%.2f", totalSalary));
+
+        System.out.println("\n📊 Overview:");
+        System.out.println(summary.render());
+
+        // Department Report
+        Map<String, Long> deptCounts = employees.stream()
+                .collect(Collectors.groupingBy(Employee::getDepartment, Collectors.counting()));
+
+        Table deptTable = new Table(3, BorderStyle.UNICODE_DOUBLE_BOX);
+        deptTable.addCell("Department");
+        deptTable.addCell("Employees");
+        deptTable.addCell("Avg Salary");
+
+        deptCounts.forEach((dept, count) -> {
+            double avg = employees.stream()
+                    .filter(e -> e.getDepartment().equals(dept))
+                    .mapToDouble(Employee::getSalary).average().orElse(0);
+
+            deptTable.addCell(dept);
+            deptTable.addCell(String.valueOf(count));
+            deptTable.addCell(String.format("%.2f", avg));
+        });
+
+        System.out.println("\n🏢 Department Summary:");
+        System.out.println(deptTable.render());
+    }
+
+    // =======================================================
+    // EXPORT DATA
+    // =======================================================
+//    public void exportData() {
+//        System.out.println("\n=== EXPORT DATA ===");
+//        System.out.println("1. CSV");
+//        System.out.println("2. JSON");
+//        System.out.print("Choose: ");
+//
+//        int choice = getIntInput();
+//        StringBuilder out = new StringBuilder();
+//
+//        if (choice == 1) {
+//            out.append("ID,Full Name,Position,Department,Hire Date,Salary,Email,Phone,Status\n");
+//            employees.forEach(e -> out.append(e.toCSV()).append("\n"));
+//        } else if (choice == 2) {
+//            out.append("[\n");
+//            for (int i = 0; i < employees.size(); i++) {
+//                out.append(employees.get(i).toJSON());
+//                if (i < employees.size() - 1) out.append(",");
+//                out.append("\n");
+//            }
+//            out.append("]");
+//        } else {
+//            System.out.println("Invalid choice.");
+//            return;
+//        }
+//
+//        Table table = new Table(1, BorderStyle.UNICODE_DOUBLE_BOX);
+//        table.addCell(out.toString());
+//
+//        System.out.println("\n📁 Exported Data:");
+//        System.out.println(table.render());
+//    }
+
+    // =======================================================
+    // IMPORT DATA
+    // =======================================================
     public void importData() {
         System.out.println("\n=== IMPORT DATA ===");
-        System.out.println("Note: This is a simplified import. In a real application, you would read from files.");
-        System.out.println("Paste your data here (type 'END' on a new line to finish):");
+        System.out.println("Paste data. Type 'END' when done:");
 
-        StringBuilder importData = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         String line;
         while (!(line = scanner.nextLine()).equals("END")) {
-            importData.append(line).append("\n");
+            sb.append(line).append("\n");
         }
 
-        System.out.println("Data received for import:");
-        System.out.println(importData.toString());
-        System.out.println("✅ Import functionality would process this data in a full implementation.");
+
+
+        System.out.println("\n📥 Received Data:");
+        System.out.println(sb.toString());
+
     }
 
-    // Helper methods
-    private Employee findEmployee(String searchTerm) {
+    // =======================================================
+    // HELPERS
+    // =======================================================
+    private Employee findEmployee(String term) {
         try {
-            int id = Integer.parseInt(searchTerm);
+            int id = Integer.parseInt(term);
+            return employees.stream().filter(e -> e.getId() == id).findFirst().orElse(null);
+        } catch (Exception ignored) {
+            String lower = term.toLowerCase();
             return employees.stream()
-                    .filter(emp -> emp.getId() == id)
-                    .findFirst()
-                    .orElse(null);
-        } catch (NumberFormatException e) {
-            // Search by name
-            return employees.stream()
-                    .filter(emp -> emp.getFullName().toLowerCase().contains(searchTerm.toLowerCase()))
-                    .findFirst()
-                    .orElse(null);
+                    .filter(e -> e.getFullName().toLowerCase().contains(lower))
+                    .findFirst().orElse(null);
         }
     }
 
-    private LocalDate getDateInput(String prompt) {
+    private LocalDate getDateInput(String msg) {
         while (true) {
-            System.out.print(prompt);
+            System.out.print(msg);
             try {
                 return LocalDate.parse(scanner.nextLine(), DATE_FORMATTER);
             } catch (DateTimeParseException e) {
-                System.out.println("❌ Invalid date format. Please use YYYY-MM-DD.");
+                System.out.println("❌ Invalid date format.");
             }
         }
     }
@@ -468,8 +435,8 @@ public class EmployeeManager {
         while (true) {
             try {
                 return Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.print("❌ Invalid input. Please enter a number: ");
+            } catch (Exception e) {
+                System.out.print("❌ Enter a number: ");
             }
         }
     }
@@ -478,8 +445,8 @@ public class EmployeeManager {
         while (true) {
             try {
                 return Double.parseDouble(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.print("❌ Invalid input. Please enter a number: ");
+            } catch (Exception e) {
+                System.out.print("❌ Enter a valid number: ");
             }
         }
     }

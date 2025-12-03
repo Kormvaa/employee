@@ -40,18 +40,18 @@ public class HRSystem {
 
     private void displayMenu() {
         System.out.println("\n=== MAIN MENU ===");
-        System.out.println("1.  Add New Employee");
-        System.out.println("2.  View Employee Details");
-        System.out.println("3.  Update Employee Information");
-        System.out.println("4.  Remove Employee");
-        System.out.println("5.  List All Employees");
-        System.out.println("6.  Search Employees");
-        System.out.println("7.  Generate Reports");
-        System.out.println("8.  Export Data");
-        System.out.println("9.  Import Data");
-        System.out.println("10. Display Help");
-        System.out.println("0.  Exit");
-        System.out.print("Choose an option (0-10): ");
+        System.out.println("1. Add New Employee");
+        System.out.println("2. View Employee Details");
+        System.out.println("3. Update Employee Information");
+        System.out.println("4. Remove Employee");
+        System.out.println("5. List All Employees");
+        System.out.println("6. Search Employees");
+        System.out.println("7. Generate Reports");
+//        System.out.println("8.  Export Data");
+        System.out.println("8. Import Data");
+        System.out.println("9. Display Help");
+        System.out.println("0. Exit");
+        System.out.print("Choose an option (0-9): ");
     }
 
     private int getMenuChoice() {
@@ -87,17 +87,17 @@ public class HRSystem {
             case 7:
                 employeeManager.generateReports();
                 break;
+//            case 8:
+//                if (securityManager.requireAuthentication("Export Data")) {
+//                    employeeManager.exportData();
+//                }
+//                break;
             case 8:
-                if (securityManager.requireAuthentication("Export Data")) {
-                    employeeManager.exportData();
-                }
-                break;
-            case 9:
                 if (securityManager.requireAuthentication("Import Data")) {
                     employeeManager.importData();
                 }
                 break;
-            case 10:
+            case 9:
                 displayHelp();
                 break;
             case 0:
@@ -117,9 +117,9 @@ public class HRSystem {
         System.out.println("5. List All Employees: View all employees with filtering options");
         System.out.println("6. Search Employees: Search across all employee fields");
         System.out.println("7. Generate Reports: View statistics and department headcount");
-        System.out.println("8. Export Data: Export to CSV or JSON format (requires password)");
-        System.out.println("9. Import Data: Import employee data (requires password)");
-        System.out.println("10. Help: Display this help message");
+//        System.out.println("8. Export Data: Export to CSV or JSON format (requires password)");
+        System.out.println("8. Import Data: Import employee data (requires password)");
+        System.out.println("9. Help: Display this help message");
         System.out.println("0. Exit: Close the application");
         System.out.println("\n🔒 Security Note:");
         System.out.println("   - Administrator password: company123");
